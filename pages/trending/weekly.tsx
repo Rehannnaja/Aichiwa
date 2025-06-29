@@ -1,6 +1,7 @@
 import Head from "next/head";
 import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
+import TrendingTabs from "@/components/TrendingTabs";
 import { getTrendingWeekly } from "@/lib/mangadex";
 import ManhwaGrid from "@/components/ManhwaGrid";
 
@@ -26,10 +27,10 @@ export default function TrendingWeekly() {
         <Navbar />
         <main className="px-4 py-6">
           <h1 className="text-2xl font-bold mb-4">📅 Trending Mingguan</h1>
-          {loading ? <p>Loading...</p> : <ManhwaGrid title="Trending Minggu Ini" data={data} />}
+          <TrendingTabs />
+          {loading ? <p>Loading...</p> : <ManhwaGrid title="Mingguan" data={data} />}
         </main>
       </div>
     </>
   );
 }
-
