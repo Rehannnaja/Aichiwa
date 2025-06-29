@@ -4,10 +4,6 @@
   Dibuat dengan Next.js + MangaDex API + Supabase.
 </p>
 
-<p align="center">
-  <img src="https://readmanganato.com/themes/hm/assets/images/logo.png" alt="banner" width="100%" />
-</p>
-
 ---
 
 ## 🚀 Fitur Unggulan
