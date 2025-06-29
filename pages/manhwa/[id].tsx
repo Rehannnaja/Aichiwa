@@ -1,11 +1,14 @@
 import { useRouter } from "next/router";
 import Head from "next/head";
 import { useEffect, useState } from "react";
+
 import Navbar from "@/components/Navbar";
-import { getMangaDetail, getChaptersByMangaId } from "@/lib/mangadex";
 import ChapterList from "@/components/ChapterList";
 import BookmarkButton from "@/components/BookmarkButton";
+import ContinueReadingButton from "@/components/ContinueReadingButton";
 import CommentSelect from "@/components/CommentSelect";
+
+import { getMangaDetail, getChaptersByMangaId } from "@/lib/mangadex";
 
 export default function ManhwaDetailPage() {
   const router = useRouter();
@@ -60,7 +63,7 @@ export default function ManhwaDetailPage() {
                   </span>
                 ))}
               </div>
-              <p className="text-sm text-muted-foreground mb-4">
+              <p className="text-sm text-muted-foreground mb-4 whitespace-pre-wrap">
                 {manga.description}
               </p>
 
@@ -69,6 +72,7 @@ export default function ManhwaDetailPage() {
                 title={manga.title}
                 coverImage={manga.coverImage}
               />
+              <ContinueReadingButton mangaId={id as string} />
             </div>
           </div>
 
