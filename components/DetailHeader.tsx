@@ -30,6 +30,7 @@ export default function DetailHeader({
         <p className="text-sm text-gray-500 mb-2 capitalize">
           Status: {status || "Unknown"}
         </p>
+
         <div className="flex flex-wrap gap-2 mb-4">
           {genres.map((genre, i) => (
             <span
@@ -40,6 +41,7 @@ export default function DetailHeader({
             </span>
           ))}
         </div>
+
         <p className="text-sm text-muted-foreground mb-4 whitespace-pre-wrap">
           {description}
         </p>
@@ -54,4 +56,3 @@ export default function DetailHeader({
     </div>
   );
 }
-
