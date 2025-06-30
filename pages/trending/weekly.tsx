@@ -10,12 +10,25 @@ export default function TrendingWeekly() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+
     async function fetchWeekly() {
-      const result = await getTrendingWeekly();
-      setData(result);
-      setLoading(false);
+      try {
+        const result = await getTrendingWeekly();
+        if (mounted) {
+          setData(result);
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error("Gagal fetch trending mingguan:", err);
+      }
     }
+
     fetchWeekly();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   return (
@@ -28,7 +41,11 @@ export default function TrendingWeekly() {
         <main className="px-4 py-6">
           <h1 className="text-2xl font-bold mb-4">📅 Trending Mingguan</h1>
           <TrendingTabs />
-          {loading ? <p>Loading...</p> : <ManhwaGrid title="Mingguan" data={data} />}
+          {loading ? (
+            <p>Loading...</p>
+          ) : (
+            <ManhwaGrid title="Mingguan" data={data} />
+          )}
         </main>
       </div>
     </>
