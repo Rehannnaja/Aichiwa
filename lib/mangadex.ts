@@ -10,10 +10,9 @@ export async function fetchPopularManhwa(limit = 12, withMature = false) {
     : `&excludedTags[]=${MATURE_TAGS.join("&excludedTags[]=")}`;
 
   const res = await fetch(
-    `${API}/manga?limit=${limit}&availableTranslatedLanguage[]=en&order[followedCount]=desc&contentRating[]=safe&contentRating[]=suggestive${tagFilter}`
+    `${API}/manga?limit=${limit}&availableTranslatedLanguage[]=en&order[followedCount]=desc&contentRating[]=safe&contentRating[]=suggestive${tagFilter}&includes[]=cover_art`
   );
   const data = await res.json();
-
   return data.data;
 }
 
@@ -21,11 +20,10 @@ export async function fetchPopularManhwa(limit = 12, withMature = false) {
 export async function fetchManhwaDetail(id: string) {
   const res = await fetch(`${API}/manga/${id}?includes[]=cover_art`);
   const data = await res.json();
-
   return data.data;
 }
 
-// ✅ Chapter list
+// ✅ Chapter list (sudah fix sesuai kebutuhan ChapterList.tsx)
 export async function fetchChapters(mangaId: string, limit = 100) {
   const res = await fetch(
     `${API}/chapter?limit=${limit}&translatedLanguage[]=en&manga=${mangaId}&order[chapter]=desc`
@@ -34,9 +32,9 @@ export async function fetchChapters(mangaId: string, limit = 100) {
 
   return data.data.map((ch: any) => ({
     id: ch.id,
+    chapter: ch.attributes.chapter,
     title: ch.attributes.title,
-    number: ch.attributes.chapter,
-    date: ch.attributes.publishAt,
+    language: ch.attributes.translatedLanguage,
   }));
 }
 
@@ -53,7 +51,7 @@ export async function fetchChapterImages(chapterId: string) {
   );
 }
 
-// ✅ Search
+// ✅ Search manhwa
 export async function searchManhwa(query: string, withMature = false) {
   const tagFilter = withMature
     ? ""
@@ -62,10 +60,9 @@ export async function searchManhwa(query: string, withMature = false) {
   const res = await fetch(
     `${API}/manga?title=${encodeURIComponent(
       query
-    )}&availableTranslatedLanguage[]=en${tagFilter}`
+    )}&availableTranslatedLanguage[]=en${tagFilter}&includes[]=cover_art`
   );
   const data = await res.json();
-
   return data.data;
 }
 
@@ -81,7 +78,7 @@ export async function fetchGenres() {
   }));
 }
 
-// ✅ Cover
+// ✅ Cover URL builder
 export function getCoverUrl(manga: any) {
   const coverArt = manga.relationships.find(
     (rel: any) => rel.type === "cover_art"
@@ -90,7 +87,7 @@ export function getCoverUrl(manga: any) {
   return `${CDN}/covers/${manga.id}/${coverArt.attributes.fileName}.512.jpg`;
 }
 
-// ✅ Filter by genre/status
+// ✅ Filter manhwa by genre & status
 export async function getMangaByFilter({
   includedTags = [],
   status = "All",
@@ -106,7 +103,7 @@ export async function getMangaByFilter({
     status !== "All" ? `&status[]=${status.toLowerCase()}` : "";
 
   const res = await fetch(
-    `${API}/manga?limit=30&availableTranslatedLanguage[]=en&contentRating[]=safe&contentRating[]=suggestive${tagFilter}${statusQuery}`
+    `${API}/manga?limit=30&availableTranslatedLanguage[]=en&contentRating[]=safe&contentRating[]=suggestive${tagFilter}${statusQuery}&includes[]=cover_art`
   );
   const json = await res.json();
 
@@ -116,5 +113,6 @@ export async function getMangaByFilter({
     description:
       manga.attributes.description.en?.slice(0, 100) || "No description",
     coverImage: getCoverUrl(manga),
+    slug: manga.id, // jika kamu pakai `/manhwa/[slug]`
   }));
-}
+                                     }
