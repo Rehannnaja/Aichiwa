@@ -10,12 +10,25 @@ export default function TrendingMonthly() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+
     async function fetchMonthly() {
-      const result = await getTrendingMonthly();
-      setData(result);
-      setLoading(false);
+      try {
+        const result = await getTrendingMonthly();
+        if (mounted) {
+          setData(result);
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error("Gagal fetch trending bulanan:", err);
+      }
     }
+
     fetchMonthly();
+
+    return () => {
+      mounted = false; // mencegah update state saat unmounted
+    };
   }, []);
 
   return (
@@ -28,7 +41,11 @@ export default function TrendingMonthly() {
         <main className="px-4 py-6">
           <h1 className="text-2xl font-bold mb-4">🗓️ Trending Bulanan</h1>
           <TrendingTabs />
-          {loading ? <p>Loading...</p> : <ManhwaGrid title="Bulanan" data={data} />}
+          {loading ? (
+            <p>Loading...</p>
+          ) : (
+            <ManhwaGrid title="Bulanan" data={data} />
+          )}
         </main>
       </div>
     </>
