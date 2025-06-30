@@ -1,10 +1,31 @@
 import Head from "next/head";
+import { useEffect, useState } from "react";
+
 import Navbar from "@/components/Navbar";
 import HeroBanner from "@/components/HeroBanner";
 import GenreShelf from "@/components/GenreShelf";
 import ManhwaGrid from "@/components/ManhwaGrid";
 
+import { fetchPopularManhwa, getCoverUrl } from "@/lib/mangadex";
+
 export default function Home() {
+  const [topManhwa, setTopManhwa] = useState<any | null>(null);
+
+  useEffect(() => {
+    async function loadHero() {
+      try {
+        const result = await fetchPopularManhwa(1); // ambil 1 manhwa terpopuler
+        if (result && result.length > 0) {
+          setTopManhwa(result[0]);
+        }
+      } catch (err) {
+        console.error("Failed to load hero banner:", err);
+      }
+    }
+
+    loadHero();
+  }, []);
+
   return (
     <>
       <Head>
@@ -16,11 +37,20 @@ export default function Home() {
         <Navbar />
 
         <main className="px-4 sm:px-6 lg:px-8 py-6 space-y-10">
-          <HeroBanner />
+          {topManhwa && (
+            <HeroBanner
+              title={topManhwa.attributes.title.en || "Manhwa Pilihan"}
+              description={
+                topManhwa.attributes.description?.en?.slice(0, 120) ||
+                "Baca manhwa pilihan terbaik minggu ini secara gratis dan legal!"
+              }
+              cover={getCoverUrl(topManhwa)}
+              slug={`/manhwa/${topManhwa.id}`}
+            />
+          )}
 
           <section>
             <h2 className="text-2xl font-bold mb-4">🔥 Trending Hari Ini</h2>
-            {/* ManhwaGrid nanti diisi data API */}
             <ManhwaGrid title="Trending Today" />
           </section>
 
@@ -33,4 +63,3 @@ export default function Home() {
     </>
   );
 }
-
