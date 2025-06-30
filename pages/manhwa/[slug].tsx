@@ -16,8 +16,9 @@ interface ManhwaDetail {
   chapters: {
     id: string;
     title: string;
-    number: number;
+    chapter: string;
     date: string;
+    language: string;
   }[];
 }
 
