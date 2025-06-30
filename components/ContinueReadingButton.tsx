@@ -1,14 +1,29 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
-export default function ContinueReadingButton({ mangaId }: { mangaId: string }) {
-  const [progress, setProgress] = useState<{
-    chapterId: string;
-    chapter: string;
-    title: string;
-  } | null>(null);
+interface ContinueReadingButtonProps {
+  mangaId: string;
+  title: string;
+  coverImage: string;
+  slug: string;
+}
+
+interface ProgressData {
+  chapterId: string;
+  chapter: string;
+  title: string;
+}
+
+export default function ContinueReadingButton({
+  mangaId,
+  title,
+  coverImage,
+  slug,
+}: ContinueReadingButtonProps) {
+  const [progress, setProgress] = useState<ProgressData | null>(null);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
     const saved = JSON.parse(localStorage.getItem("progress") || "{}");
     if (saved[mangaId]) {
       setProgress(saved[mangaId]);
@@ -20,10 +35,9 @@ export default function ContinueReadingButton({ mangaId }: { mangaId: string }) 
   return (
     <Link
       href={`/reader/${progress.chapterId}`}
-      className="inline-block mt-4 px-4 py-2 rounded bg-primary text-white hover:bg-primary/90 transition text-sm font-medium"
+      className="inline-block px-3 py-1.5 text-xs font-medium rounded bg-blue-600 text-white hover:bg-blue-700 transition"
     >
-      👉 Lanjutkan Membaca: Chapter {progress.chapter}
+      👉 Lanjut: Chapter {progress.chapter}
     </Link>
   );
 }
-
