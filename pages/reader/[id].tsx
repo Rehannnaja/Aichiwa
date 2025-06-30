@@ -2,7 +2,7 @@ import { useRouter } from "next/router";
 import Head from "next/head";
 import Navbar from "@/components/Navbar";
 import { useEffect, useState } from "react";
-import { getChapterImages } from "@/lib/mangadex";
+import { fetchChapterImages } from "@/lib/mangadex"; // ✅ Fix di sini
 import Image from "next/image";
 
 export default function ReaderPage() {
@@ -19,7 +19,7 @@ export default function ReaderPage() {
     async function fetchImages() {
       setLoading(true);
       try {
-        const result = await getChapterImages(id as string);
+        const result = await fetchChapterImages(id as string); // ✅ Fix juga di sini
         setImages(result);
       } catch (err) {
         console.error(err);
