@@ -7,7 +7,7 @@ import ChapterList from "@/components/ChapterList";
 import CommentSelect from "@/components/CommentSelect";
 import DetailHeader from "@/components/DetailHeader";
 
-import { getMangaDetail, getChaptersByMangaId } from "@/lib/mangadex";
+import { fetchManhwaDetail, fetchChapters, getCoverUrl } from "@/lib/mangadex";
 
 export default function ManhwaDetailPage() {
   const router = useRouter();
@@ -21,11 +21,28 @@ export default function ManhwaDetailPage() {
     if (!id) return;
 
     async function fetchData() {
-      const detail = await getMangaDetail(id as string);
-      const ch = await getChaptersByMangaId(id as string);
-      setManga(detail);
-      setChapters(ch);
-      setLoading(false);
+      try {
+        const detail = await fetchManhwaDetail(id as string);
+        const ch = await fetchChapters(id as string);
+
+        setManga({
+          id: detail.id,
+          title: detail.attributes.title.en || "No title",
+          description:
+            detail.attributes.description.en?.slice(0, 300) || "No description",
+          status: detail.attributes.status || "unknown",
+          genres: detail.attributes.tags.map(
+            (tag: any) => tag.attributes.name.en
+          ),
+          coverImage: getCoverUrl(detail),
+        });
+
+        setChapters(ch);
+      } catch (err) {
+        console.error("Failed to load manga:", err);
+      } finally {
+        setLoading(false);
+      }
     }
 
     fetchData();
@@ -42,7 +59,7 @@ export default function ManhwaDetailPage() {
         <Navbar />
         <main className="px-4 py-8 max-w-5xl mx-auto">
           <DetailHeader
-            mangaId={id as string}
+            mangaId={manga.id}
             title={manga.title}
             status={manga.status}
             genres={manga.genres}
@@ -51,7 +68,7 @@ export default function ManhwaDetailPage() {
           />
 
           <ChapterList chapters={chapters} />
-          <CommentSelect mangaId={id as string} />
+          <CommentSelect mangaId={manga.id} />
         </main>
       </div>
     </>
