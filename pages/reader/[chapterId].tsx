@@ -7,23 +7,30 @@ import Image from "next/image";
 
 export default function ReaderPage() {
   const router = useRouter();
-  const { id } = router.query;
+  const { chapterId } = router.query;
 
   const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!id) return;
+    if (!chapterId) return;
 
     async function fetchImages() {
       setLoading(true);
-      const result = await fetchChapterImages(id as string);
-      setImages(result);
-      setLoading(false);
+      try {
+        const result = await fetchChapterImages(chapterId as string);
+        setImages(result);
+      } catch (err) {
+        console.error(err);
+        setError("Gagal memuat gambar chapter.");
+      } finally {
+        setLoading(false);
+      }
     }
 
     fetchImages();
-  }, [id]);
+  }, [chapterId]);
 
   return (
     <>
@@ -38,6 +45,8 @@ export default function ReaderPage() {
 
           {loading ? (
             <p>Memuat gambar chapter...</p>
+          ) : error ? (
+            <p className="text-red-500">{error}</p>
           ) : (
             <div className="space-y-4">
               {images.map((src, i) => (
@@ -48,6 +57,7 @@ export default function ReaderPage() {
                   width={800}
                   height={1200}
                   className="w-full rounded shadow-md"
+                  unoptimized
                 />
               ))}
             </div>
