@@ -8,6 +8,7 @@ interface Props {
   genres: string[];
   description: string;
   coverImage: string;
+  slug: string; // ✅ Tambahkan slug karena diperlukan oleh ContinueReadingButton
 }
 
 export default function DetailHeader({
@@ -17,6 +18,7 @@ export default function DetailHeader({
   genres,
   description,
   coverImage,
+  slug,
 }: Props) {
   return (
     <div className="flex flex-col md:flex-row gap-6">
@@ -46,12 +48,19 @@ export default function DetailHeader({
           {description}
         </p>
 
-        <BookmarkButton
-          mangaId={mangaId}
-          title={title}
-          coverImage={coverImage}
-        />
-        <ContinueReadingButton mangaId={mangaId} />
+        <div className="flex gap-2">
+          <BookmarkButton
+            mangaId={mangaId}
+            title={title}
+            coverImage={coverImage}
+          />
+          <ContinueReadingButton
+            mangaId={mangaId}
+            title={title}
+            coverImage={coverImage}
+            slug={slug}
+          />
+        </div>
       </div>
     </div>
   );
