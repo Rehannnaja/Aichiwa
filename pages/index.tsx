@@ -10,20 +10,22 @@ import { fetchPopularManhwa, getCoverUrl } from "@/lib/mangadex";
 
 export default function Home() {
   const [topManhwa, setTopManhwa] = useState<any | null>(null);
+  const [trending, setTrending] = useState<any[]>([]);
 
   useEffect(() => {
-    async function loadHero() {
+    async function loadManhwa() {
       try {
-        const result = await fetchPopularManhwa(1); // ambil 1 manhwa terpopuler
+        const result = await fetchPopularManhwa(13); // 1 untuk hero, 12 untuk grid
         if (result && result.length > 0) {
           setTopManhwa(result[0]);
+          setTrending(result.slice(1));
         }
       } catch (err) {
-        console.error("Failed to load hero banner:", err);
+        console.error("Failed to load manhwa:", err);
       }
     }
 
-    loadHero();
+    loadManhwa();
   }, []);
 
   return (
@@ -51,7 +53,18 @@ export default function Home() {
 
           <section>
             <h2 className="text-2xl font-bold mb-4">🔥 Trending Hari Ini</h2>
-            <ManhwaGrid title="Trending Today" />
+            <ManhwaGrid
+              data={trending.map((m) => ({
+                id: m.id,
+                title: m.attributes.title.en,
+                description: m.attributes.description?.en,
+                cover: getCoverUrl(m),
+                slug: m.id,
+              }))}
+              withBookmark
+              withContinue
+              showDescription
+            />
           </section>
 
           <section>
