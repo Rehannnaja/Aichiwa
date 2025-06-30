@@ -1,66 +1,66 @@
 import { useRouter } from "next/router";
 import Head from "next/head";
-import { useEffect, useState } from "react";
-
 import Navbar from "@/components/Navbar";
-import RenderImageList from "@/components/RenderImageList";
+import { useEffect, useState } from "react";
+import { getChapterImages } from "@/lib/mangadex";
+import Image from "next/image";
 
 export default function ReaderPage() {
   const router = useRouter();
   const { id } = router.query;
 
   const [images, setImages] = useState<string[]>([]);
-  const [title, setTitle] = useState("");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
 
-    async function fetchChapter() {
+    async function fetchImages() {
+      setLoading(true);
       try {
-        const res = await fetch(`https://api.mangadex.org/at-home/server/${id}`);
-        const data = await res.json();
-
-        const baseUrl = data.baseUrl;
-        const hash = data.chapter.hash;
-        const pages: string[] = data.chapter.data;
-
-        const fullUrls = pages.map(
-          (fileName: string) => `${baseUrl}/data/${hash}/${fileName}`
-        );
-
-        setImages(fullUrls);
-
-        // Optional: Fetch chapter info (for title)
-        const chapterRes = await fetch(`https://api.mangadex.org/chapter/${id}`);
-        const chapterJson = await chapterRes.json();
-        const chapTitle = chapterJson.data.attributes.title || `Chapter ${chapterJson.data.attributes.chapter}`;
-        setTitle(chapTitle);
+        const result = await getChapterImages(id as string);
+        setImages(result);
       } catch (err) {
-        console.error("Failed to fetch chapter", err);
+        console.error(err);
+        setError("Gagal memuat gambar chapter.");
       } finally {
         setLoading(false);
       }
     }
 
-    fetchChapter();
+    fetchImages();
   }, [id]);
 
   return (
     <>
       <Head>
-        <title>{title || "Reading..."} – Aichiwa</title>
+        <title>Baca Chapter – Aichiwa</title>
       </Head>
+
       <div className="min-h-screen bg-background text-foreground">
         <Navbar />
-
-        <main className="max-w-4xl mx-auto px-4 py-8">
-          <h1 className="text-xl font-bold mb-6">{title}</h1>
+        <main className="px-4 sm:px-6 lg:px-8 py-6 max-w-3xl mx-auto">
+          <h1 className="text-xl font-bold mb-4">📖 Membaca Chapter</h1>
 
           {loading ? (
-            <p className="text-center">Loading chapter...</p>
+            <p>Memuat gambar chapter...</p>
+          ) : error ? (
+            <p className="text-red-500">{error}</p>
           ) : (
-            <RenderImageList images={images} />
+            <div className="space-y-4">
+              {images.map((src, i) => (
+                <Image
+                  key={i}
+                  src={src}
+                  alt={`Page ${i + 1}`}
+                  width={800}
+                  height={1200}
+                  className="w-full rounded shadow-md"
+                  unoptimized
+                />
+              ))}
+            </div>
           )}
         </main>
       </div>
