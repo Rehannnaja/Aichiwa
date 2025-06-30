@@ -7,7 +7,11 @@ import ChapterList from "@/components/ChapterList";
 import CommentSelect from "@/components/CommentSelect";
 import DetailHeader from "@/components/DetailHeader";
 
-import { fetchManhwaDetail, fetchChapters, getCoverUrl } from "@/lib/mangadex";
+import {
+  fetchManhwaDetail,
+  fetchChapters,
+  getCoverUrl,
+} from "@/lib/mangadex";
 
 export default function ManhwaDetailPage() {
   const router = useRouter();
@@ -35,6 +39,7 @@ export default function ManhwaDetailPage() {
             (tag: any) => tag.attributes.name.en
           ),
           coverImage: getCoverUrl(detail),
+          slug: detail.id, // ✅ Tambahkan slug agar tidak error di DetailHeader
         });
 
         setChapters(ch);
@@ -65,6 +70,7 @@ export default function ManhwaDetailPage() {
             genres={manga.genres}
             description={manga.description}
             coverImage={manga.coverImage}
+            slug={manga.slug} // ✅ Perlu agar build tidak gagal
           />
 
           <ChapterList chapters={chapters} />
