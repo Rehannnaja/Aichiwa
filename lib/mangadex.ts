@@ -113,6 +113,45 @@ export async function getMangaByFilter({
     description:
       manga.attributes.description.en?.slice(0, 100) || "No description",
     coverImage: getCoverUrl(manga),
-    slug: manga.id, // jika kamu pakai `/manhwa/[slug]`
+    slug: manga.id,
   }));
-                                     }
+}
+
+// ✅ Trending daily
+export async function getTrendingDaily() {
+  const data = await fetchPopularManhwa(12, false);
+  return data.map((manga: any) => ({
+    id: manga.id,
+    title: manga.attributes.title.en || "No title",
+    description:
+      manga.attributes.description.en?.slice(0, 100) || "No description",
+    coverImage: getCoverUrl(manga),
+    slug: manga.id,
+  }));
+}
+
+// ✅ Trending weekly
+export async function getTrendingWeekly() {
+  const data = await fetchPopularManhwa(12, false);
+  return data.map((manga: any) => ({
+    id: manga.id,
+    title: manga.attributes.title.en || "No title",
+    description:
+      manga.attributes.description.en?.slice(0, 100) || "No description",
+    coverImage: getCoverUrl(manga),
+    slug: manga.id,
+  }));
+}
+
+// ✅ Trending monthly
+export async function getTrendingMonthly() {
+  const data = await fetchPopularManhwa(12, false);
+  return data.map((manga: any) => ({
+    id: manga.id,
+    title: manga.attributes.title.en || "No title",
+    description:
+      manga.attributes.description.en?.slice(0, 100) || "No description",
+    coverImage: getCoverUrl(manga),
+    slug: manga.id,
+  }));
+}
