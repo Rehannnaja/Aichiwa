@@ -5,7 +5,9 @@ const MATURE_TAGS = ["Pornographic", "Hentai", "Mature"];
 
 // ✅ Fetch populer
 export async function fetchPopularManhwa(limit = 12, withMature = false) {
-  const tagFilter = withMature ? "" : `&excludedTags[]=${MATURE_TAGS.join("&excludedTags[]=")}`;
+  const tagFilter = withMature
+    ? ""
+    : `&excludedTags[]=${MATURE_TAGS.join("&excludedTags[]=")}`;
 
   const res = await fetch(
     `${API}/manga?limit=${limit}&availableTranslatedLanguage[]=en&order[followedCount]=desc&contentRating[]=safe&contentRating[]=suggestive${tagFilter}`
@@ -46,19 +48,21 @@ export async function fetchChapterImages(chapterId: string) {
   const { baseUrl, chapter } = json;
   const { hash, data } = chapter;
 
-  const imageUrls = data.map(
+  return data.map(
     (filename: string) => `${baseUrl}/data/${hash}/${filename}`
   );
-
-  return imageUrls;
 }
 
 // ✅ Search
 export async function searchManhwa(query: string, withMature = false) {
-  const tagFilter = withMature ? "" : `&excludedTags[]=${MATURE_TAGS.join("&excludedTags[]=")}`;
+  const tagFilter = withMature
+    ? ""
+    : `&excludedTags[]=${MATURE_TAGS.join("&excludedTags[]=")}`;
 
   const res = await fetch(
-    `${API}/manga?title=${encodeURIComponent(query)}&availableTranslatedLanguage[]=en${tagFilter}`
+    `${API}/manga?title=${encodeURIComponent(
+      query
+    )}&availableTranslatedLanguage[]=en${tagFilter}`
   );
   const data = await res.json();
 
@@ -79,7 +83,9 @@ export async function fetchGenres() {
 
 // ✅ Cover
 export function getCoverUrl(manga: any) {
-  const coverArt = manga.relationships.find((rel: any) => rel.type === "cover_art");
+  const coverArt = manga.relationships.find(
+    (rel: any) => rel.type === "cover_art"
+  );
   if (!coverArt) return "";
   return `${CDN}/covers/${manga.id}/${coverArt.attributes.fileName}.512.jpg`;
 }
@@ -96,7 +102,8 @@ export async function getMangaByFilter({
     .map((tag) => `&includedTags[]=${encodeURIComponent(tag)}`)
     .join("");
 
-  const statusQuery = status !== "All" ? `&status[]=${status.toLowerCase()}` : "";
+  const statusQuery =
+    status !== "All" ? `&status[]=${status.toLowerCase()}` : "";
 
   const res = await fetch(
     `${API}/manga?limit=30&availableTranslatedLanguage[]=en&contentRating[]=safe&contentRating[]=suggestive${tagFilter}${statusQuery}`
@@ -106,7 +113,8 @@ export async function getMangaByFilter({
   return json.data.map((manga: any) => ({
     id: manga.id,
     title: manga.attributes.title.en || "No title",
-    description: manga.attributes.description.en?.slice(0, 100) || "No description",
+    description:
+      manga.attributes.description.en?.slice(0, 100) || "No description",
     coverImage: getCoverUrl(manga),
   }));
 }
