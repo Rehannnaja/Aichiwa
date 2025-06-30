@@ -3,6 +3,7 @@ const CDN = "https://uploads.mangadex.org";
 
 const MATURE_TAGS = ["Pornographic", "Hentai", "Mature"];
 
+// ✅ Fetch populer
 export async function fetchPopularManhwa(limit = 12, withMature = false) {
   const tagFilter = withMature ? "" : `&excludedTags[]=${MATURE_TAGS.join("&excludedTags[]=")}`;
 
@@ -10,20 +11,25 @@ export async function fetchPopularManhwa(limit = 12, withMature = false) {
     `${API}/manga?limit=${limit}&availableTranslatedLanguage[]=en&order[followedCount]=desc&contentRating[]=safe&contentRating[]=suggestive${tagFilter}`
   );
   const data = await res.json();
+
   return data.data;
 }
 
+// ✅ Detail manhwa
 export async function fetchManhwaDetail(id: string) {
   const res = await fetch(`${API}/manga/${id}?includes[]=cover_art`);
   const data = await res.json();
+
   return data.data;
 }
 
+// ✅ Chapter list
 export async function fetchChapters(mangaId: string, limit = 100) {
   const res = await fetch(
     `${API}/chapter?limit=${limit}&translatedLanguage[]=en&manga=${mangaId}&order[chapter]=desc`
   );
   const data = await res.json();
+
   return data.data.map((ch: any) => ({
     id: ch.id,
     title: ch.attributes.title,
@@ -32,18 +38,22 @@ export async function fetchChapters(mangaId: string, limit = 100) {
   }));
 }
 
+// ✅ Gambar chapter
 export async function fetchChapterImages(chapterId: string) {
   const res = await fetch(`${API}/at-home/server/${chapterId}`);
   const json = await res.json();
+
   const { baseUrl, chapter } = json;
   const { hash, data } = chapter;
 
   const imageUrls = data.map(
     (filename: string) => `${baseUrl}/data/${hash}/${filename}`
   );
+
   return imageUrls;
 }
 
+// ✅ Search
 export async function searchManhwa(query: string, withMature = false) {
   const tagFilter = withMature ? "" : `&excludedTags[]=${MATURE_TAGS.join("&excludedTags[]=")}`;
 
@@ -51,9 +61,11 @@ export async function searchManhwa(query: string, withMature = false) {
     `${API}/manga?title=${encodeURIComponent(query)}&availableTranslatedLanguage[]=en${tagFilter}`
   );
   const data = await res.json();
+
   return data.data;
 }
 
+// ✅ Genre list
 export async function fetchGenres() {
   const res = await fetch(`${API}/manga/tag`);
   const data = await res.json();
@@ -65,33 +77,36 @@ export async function fetchGenres() {
   }));
 }
 
+// ✅ Cover
 export function getCoverUrl(manga: any) {
   const coverArt = manga.relationships.find((rel: any) => rel.type === "cover_art");
   if (!coverArt) return "";
   return `${CDN}/covers/${manga.id}/${coverArt.attributes.fileName}.512.jpg`;
 }
 
-// ✅ Tambahan: Fungsi untuk filter genre & status
+// ✅ Filter by genre/status
 export async function getMangaByFilter({
-  limit = 20,
   includedTags = [],
-  status = "",
-  withMature = false,
+  status = "All",
 }: {
-  limit?: number;
   includedTags?: string[];
   status?: string;
-  withMature?: boolean;
 }) {
-  const tagFilter = includedTags.map(tag => `includedTags[]=${tag}`).join("&");
-  const statusFilter = status ? `&status[]=${status}` : "";
-  const matureFilter = withMature
-    ? ""
-    : `&excludedTags[]=${MATURE_TAGS.join("&excludedTags[]=")}`;
+  const tagFilter = includedTags
+    .map((tag) => `&includedTags[]=${encodeURIComponent(tag)}`)
+    .join("");
 
-  const query = `${API}/manga?limit=${limit}&availableTranslatedLanguage[]=en&${tagFilter}${statusFilter}${matureFilter}&order[followedCount]=desc`;
+  const statusQuery = status !== "All" ? `&status[]=${status.toLowerCase()}` : "";
 
-  const res = await fetch(query);
-  const data = await res.json();
-  return data.data;
+  const res = await fetch(
+    `${API}/manga?limit=30&availableTranslatedLanguage[]=en&contentRating[]=safe&contentRating[]=suggestive${tagFilter}${statusQuery}`
+  );
+  const json = await res.json();
+
+  return json.data.map((manga: any) => ({
+    id: manga.id,
+    title: manga.attributes.title.en || "No title",
+    description: manga.attributes.description.en?.slice(0, 100) || "No description",
+    coverImage: getCoverUrl(manga),
+  }));
 }
