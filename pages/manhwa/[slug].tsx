@@ -2,8 +2,8 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 
-import BookmarkButton from "@/components/BookmarkButton"; // ✅ default import
-import ContinueReadingButton from "@/components/ContinueReadingButton"; // ✅ default import
+import BookmarkButton from "@/components/BookmarkButton";
+import ContinueReadingButton from "@/components/ContinueReadingButton";
 import ChapterList from "@/components/ChapterList";
 
 interface ManhwaDetail {
@@ -84,8 +84,17 @@ export default function ManhwaDetailPage() {
           </p>
 
           <div className="flex gap-3 mt-2">
-            <BookmarkButton manhwa={manhwa} />
-            <ContinueReadingButton manhwa={manhwa} />
+            <BookmarkButton
+              mangaId={manhwa.id}
+              title={manhwa.title}
+              coverImage={manhwa.cover}
+            />
+            <ContinueReadingButton
+              mangaId={manhwa.id}
+              title={manhwa.title}
+              coverImage={manhwa.cover}
+              slug={manhwa.slug}
+            />
           </div>
         </div>
       </div>
