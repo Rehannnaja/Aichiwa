@@ -60,8 +60,21 @@ export default function ManhwaGrid({
 
           {(withBookmark || withContinue) && (
             <div className="absolute top-2 right-2 flex space-x-1 z-10">
-              {withBookmark && <BookmarkButton manhwa={manhwa} />}
-              {withContinue && <ContinueReadingButton manhwa={manhwa} />}
+              {withBookmark && (
+                <BookmarkButton
+                  mangaId={manhwa.id}
+                  title={manhwa.title}
+                  coverImage={manhwa.cover}
+                />
+              )}
+              {withContinue && (
+                <ContinueReadingButton
+                  mangaId={manhwa.id}
+                  title={manhwa.title}
+                  coverImage={manhwa.cover}
+                  slug={manhwa.slug}
+                />
+              )}
             </div>
           )}
         </div>
@@ -69,4 +82,3 @@ export default function ManhwaGrid({
     </div>
   );
 }
-
