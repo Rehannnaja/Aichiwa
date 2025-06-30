@@ -28,7 +28,10 @@ export default function GenreDetailPage() {
 
     async function fetchData() {
       setLoading(true);
-      const result = await getMangaByFilter(selectedGenres, selectedStatus);
+      const result = await getMangaByFilter({
+        includedTags: selectedGenres,
+        status: selectedStatus,
+      });
       setMangaList(result);
       setLoading(false);
     }
