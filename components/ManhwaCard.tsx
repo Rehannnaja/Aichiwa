@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { BookmarkButton } from "./BookmarkButton";
+import BookmarkButton from "./BookmarkButton";
 
 interface ManhwaCardProps {
   id: string;
