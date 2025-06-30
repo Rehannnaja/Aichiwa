@@ -2,7 +2,7 @@ import { useRouter } from "next/router";
 import Head from "next/head";
 import Navbar from "@/components/Navbar";
 import { useEffect, useState } from "react";
-import { getChapterImages } from "@/lib/mangadex";
+import { fetchChapterImages } from "@/lib/mangadex";
 import Image from "next/image";
 
 export default function ReaderPage() {
@@ -17,7 +17,7 @@ export default function ReaderPage() {
 
     async function fetchImages() {
       setLoading(true);
-      const result = await getChapterImages(id as string);
+      const result = await fetchChapterImages(id as string);
       setImages(result);
       setLoading(false);
     }
@@ -57,4 +57,3 @@ export default function ReaderPage() {
     </>
   );
 }
-
