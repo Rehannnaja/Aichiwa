@@ -7,6 +7,12 @@ interface Props {
   setSelectedStatus: (status: string) => void;
 }
 
+interface Genre {
+  id: string;
+  name: string;
+  group: string;
+}
+
 const statuses = ["All", "Ongoing", "Completed", "Hiatus", "Cancelled"];
 
 export default function FilterSidebar({
@@ -19,9 +25,14 @@ export default function FilterSidebar({
 
   useEffect(() => {
     async function fetchGenres() {
-      const res = await fetch("/api/genres");
-      const json = await res.json();
-      setGenresList(json);
+      try {
+        const res = await fetch("/api/genres");
+        const json: Genre[] = await res.json();
+        const onlyNames = json.map((g) => g.name);
+        setGenresList(onlyNames);
+      } catch (error) {
+        console.error("Failed to fetch genres:", error);
+      }
     }
 
     fetchGenres();
@@ -75,4 +86,3 @@ export default function FilterSidebar({
     </aside>
   );
 }
-
