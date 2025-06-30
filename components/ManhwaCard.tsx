@@ -33,8 +33,13 @@ export default function ManhwaCard({ id, title, cover, slug, rank }: ManhwaCardP
         </Link>
       </div>
 
+      {/* ✅ Fixed: kirim prop satu-satu sesuai yang diminta BookmarkButton */}
       <div className="absolute top-2 right-2 z-10">
-        <BookmarkButton manhwa={{ id, title, cover, slug }} />
+        <BookmarkButton
+          mangaId={id}
+          title={title}
+          coverImage={cover}
+        />
       </div>
 
       {rank !== undefined && (
@@ -45,4 +50,3 @@ export default function ManhwaCard({ id, title, cover, slug, rank }: ManhwaCardP
     </div>
   );
 }
-
