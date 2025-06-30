@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
-import { BookmarkButton } from "./BookmarkButton";
-import { ContinueReadingButton } from "./ContinueReadingButton";
+import BookmarkButton from "./BookmarkButton";
+import ContinueReadingButton from "./ContinueReadingButton";
 
 export interface Manhwa {
   id: string;
