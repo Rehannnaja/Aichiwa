@@ -1,8 +1,9 @@
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { BookmarkButton } from "@/components/BookmarkButton";
-import { ContinueReadingButton } from "@/components/ContinueReadingButton";
+
+import BookmarkButton from "@/components/BookmarkButton"; // ✅ default import
+import ContinueReadingButton from "@/components/ContinueReadingButton"; // ✅ default import
 import ChapterList from "@/components/ChapterList";
 
 interface ManhwaDetail {
@@ -29,7 +30,7 @@ export default function ManhwaDetailPage() {
 
   useEffect(() => {
     if (!slug) return;
-    
+
     const fetchData = async () => {
       try {
         const res = await fetch(`/api/manhwa/${slug}`);
