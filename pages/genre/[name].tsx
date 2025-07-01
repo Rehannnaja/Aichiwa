@@ -1,44 +1,22 @@
-import { useRouter } from "next/router";
 import Head from "next/head";
-import { useEffect, useState } from "react";
 import Link from "next/link";
+import { GetServerSideProps } from "next";
 
 import Navbar from "@/components/Navbar";
 import FilterSidebar from "@/components/FilterSidebar";
-import { getMangaByFilter } from "@/lib/mangadex";
+import { getMangaByFilter, fetchGenres } from "@/lib/mangadex";
 
-export default function GenreDetailPage() {
-  const router = useRouter();
-  const { name } = router.query;
-
-  const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
-  const [selectedStatus, setSelectedStatus] = useState("All");
-  const [mangaList, setMangaList] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!name) return;
-
-    const genreName = decodeURIComponent(name as string);
-    setSelectedGenres([capitalizeGenre(genreName)]);
-  }, [name]);
-
-  useEffect(() => {
-    if (selectedGenres.length === 0) return;
-
-    async function fetchData() {
-      setLoading(true);
-      const result = await getMangaByFilter({
-        includedTags: selectedGenres,
-        status: selectedStatus,
-      });
-      setMangaList(result);
-      setLoading(false);
-    }
-
-    fetchData();
-  }, [selectedGenres, selectedStatus]);
-
+export default function GenreDetailPage({
+  name,
+  genreId,
+  mangaList,
+  allGenres,
+}: {
+  name: string;
+  genreId: string;
+  mangaList: any[];
+  allGenres: { id: string; name: string }[];
+}) {
   return (
     <>
       <Head>
@@ -51,17 +29,17 @@ export default function GenreDetailPage() {
 
           <div className="flex flex-col md:flex-row gap-6">
             <FilterSidebar
-              selectedGenres={selectedGenres}
-              setSelectedGenres={setSelectedGenres}
-              selectedStatus={selectedStatus}
-              setSelectedStatus={setSelectedStatus}
+              selectedGenres={[genreId]}
+              setSelectedGenres={() => {}}
+              selectedStatus={"All"}
+              setSelectedStatus={() => {}}
+              disabled
+              allGenres={allGenres}
             />
 
             <div className="flex-1">
-              {loading ? (
-                <p>Loading manhwa...</p>
-              ) : mangaList.length === 0 ? (
-                <p>No manhwa found for this genre and filter.</p>
+              {mangaList.length === 0 ? (
+                <p>No manhwa found for this genre.</p>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                   {mangaList.map((manga) => (
@@ -93,9 +71,29 @@ export default function GenreDetailPage() {
   );
 }
 
-function capitalizeGenre(str: string) {
-  return str
-    .split(" ")
-    .map((word) => word[0]?.toUpperCase() + word.slice(1))
-    .join(" ");
-}
+// ✅ Server-side data fetch
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  const { name } = context.params as { name: string };
+  const allGenres = await fetchGenres();
+  const matched = allGenres.find(
+    (g) => g.name.toLowerCase() === decodeURIComponent(name).toLowerCase()
+  );
+
+  if (!matched) {
+    return { notFound: true };
+  }
+
+  const mangaList = await getMangaByFilter({
+    includedTags: [matched.id],
+    status: "All",
+  });
+
+  return {
+    props: {
+      name,
+      genreId: matched.id,
+      mangaList,
+      allGenres,
+    },
+  };
+};
