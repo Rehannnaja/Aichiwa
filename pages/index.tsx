@@ -1,6 +1,4 @@
 import Head from "next/head";
-import { useEffect, useState } from "react";
-
 import Navbar from "@/components/Navbar";
 import HeroBanner from "@/components/HeroBanner";
 import GenreShelf from "@/components/GenreShelf";
@@ -8,26 +6,7 @@ import ManhwaGrid from "@/components/ManhwaGrid";
 
 import { fetchPopularManhwa, getCoverUrl } from "@/lib/mangadex";
 
-export default function Home() {
-  const [topManhwa, setTopManhwa] = useState<any | null>(null);
-  const [trending, setTrending] = useState<any[]>([]);
-
-  useEffect(() => {
-    async function loadManhwa() {
-      try {
-        const result = await fetchPopularManhwa(13); // 1 untuk hero, 12 untuk grid
-        if (result && result.length > 0) {
-          setTopManhwa(result[0]);
-          setTrending(result.slice(1));
-        }
-      } catch (err) {
-        console.error("Failed to load manhwa:", err);
-      }
-    }
-
-    loadManhwa();
-  }, []);
-
+export default function Home({ topManhwa, trending }: any) {
   return (
     <>
       <Head>
@@ -59,10 +38,11 @@ export default function Home() {
               </p>
             ) : (
               <ManhwaGrid
-                data={trending.map((m) => ({
+                data={trending.map((m: any) => ({
                   id: m.id,
                   title: m.attributes.title?.en || "Tanpa Judul",
-                  description: m.attributes.description?.en?.slice(0, 100) || "Deskripsi belum tersedia.",
+                  description:
+                    m.attributes.description?.en?.slice(0, 100) || "Deskripsi belum tersedia.",
                   cover: getCoverUrl(m),
                   slug: m.id,
                 }))}
@@ -81,4 +61,27 @@ export default function Home() {
       </div>
     </>
   );
+}
+
+// ✅ Server-side fetch supaya aman dari blokir CORS atau browser
+export async function getServerSideProps() {
+  try {
+    const result = await fetchPopularManhwa(13); // 1 hero + 12 trending
+    const topManhwa = result[0] || null;
+    const trending = result.slice(1);
+    return {
+      props: {
+        topManhwa,
+        trending,
+      },
+    };
+  } catch (error) {
+    console.error("Gagal load manhwa:", error);
+    return {
+      props: {
+        topManhwa: null,
+        trending: [],
+      },
+    };
+  }
 }
