@@ -28,18 +28,26 @@ export default function ManhwaDetailPage() {
 
   const [manhwa, setManhwa] = useState<ManhwaDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
     if (!slug || typeof slug !== "string") return;
 
     const fetchData = async () => {
+      setLoading(true);
       try {
         const res = await fetch(`/api/manhwa/${slug}`);
-        if (!res.ok) throw new Error("Failed to fetch");
+        if (!res.ok) throw new Error(`Gagal fetch manhwa: ${res.status}`);
+
         const data = await res.json();
+        if (!data || !data.title || !data.cover) {
+          throw new Error("Data manhwa tidak valid.");
+        }
+
         setManhwa(data);
-      } catch (err) {
-        console.error("Failed to fetch manhwa:", err);
+      } catch (err: any) {
+        console.error("[Fetch Error]", err.message || err);
+        setErrorMsg("Manhwa tidak ditemukan atau terjadi kesalahan.");
       } finally {
         setLoading(false);
       }
@@ -49,7 +57,8 @@ export default function ManhwaDetailPage() {
   }, [slug]);
 
   if (loading) return <div className="p-4 text-white">Loading...</div>;
-  if (!manhwa) return <div className="p-4 text-red-500">Manhwa tidak ditemukan.</div>;
+  if (!manhwa)
+    return <div className="p-4 text-red-500">{errorMsg || "Manhwa tidak ditemukan."}</div>;
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-6 text-white">
