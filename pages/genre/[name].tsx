@@ -12,6 +12,14 @@ interface Genre {
   group: string;
 }
 
+interface Manga {
+  id: string;
+  title: string;
+  description: string;
+  coverImage: string;
+  slug: string;
+}
+
 export default function GenreDetailPage({
   name,
   genreId,
@@ -20,7 +28,7 @@ export default function GenreDetailPage({
 }: {
   name: string;
   genreId: string;
-  mangaList: any[];
+  mangaList: Manga[];
   allGenres: Genre[];
 }) {
   return (
@@ -39,7 +47,6 @@ export default function GenreDetailPage({
               setSelectedGenres={() => {}}
               selectedStatus={"All"}
               setSelectedStatus={() => {}}
-              disabled
               allGenres={allGenres}
             />
 
@@ -51,7 +58,7 @@ export default function GenreDetailPage({
                   {mangaList.map((manga) => (
                     <Link
                       key={manga.id}
-                      href={`/manhwa/${manga.id}`}
+                      href={`/manhwa/${manga.slug}`}
                       className="bg-muted hover:bg-primary hover:text-white rounded overflow-hidden shadow transition"
                     >
                       <img
@@ -82,10 +89,11 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   const { name } = context.params as { name: string };
   const rawGenres = await fetchGenres();
 
-  // Tambahkan group agar valid dengan FilterSidebar
-  const allGenres = rawGenres.map((genre) => ({
-    ...genre,
-    group: "genre",
+  // Pastikan semua genre punya group agar valid di FilterSidebar
+  const allGenres: Genre[] = rawGenres.map((genre) => ({
+    id: genre.id,
+    name: genre.name,
+    group: genre.group || "genre",
   }));
 
   const matched = allGenres.find(
