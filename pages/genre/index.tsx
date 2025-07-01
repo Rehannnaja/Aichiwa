@@ -1,37 +1,15 @@
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import Head from "next/head";
 
 import Navbar from "@/components/Navbar";
+import { fetchGenres } from "@/lib/mangadex";
 
 interface GenreTag {
   id: string;
   name: string;
 }
 
-export default function GenreIndexPage() {
-  const [genres, setGenres] = useState<GenreTag[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchGenres() {
-      const res = await fetch("https://api.mangadex.org/manga/tag");
-      const json = await res.json();
-
-      const filtered = json.data
-        .filter((tag: any) => tag.attributes.group === "genre")
-        .map((tag: any) => ({
-          id: tag.id,
-          name: tag.attributes.name.en,
-        }));
-
-      setGenres(filtered);
-      setLoading(false);
-    }
-
-    fetchGenres();
-  }, []);
-
+export default function GenreIndexPage({ genres }: { genres: GenreTag[] }) {
   return (
     <>
       <Head>
@@ -42,8 +20,8 @@ export default function GenreIndexPage() {
         <main className="max-w-6xl mx-auto px-4 py-8">
           <h1 className="text-3xl font-bold mb-6">Genres</h1>
 
-          {loading ? (
-            <p>Loading genres...</p>
+          {genres.length === 0 ? (
+            <p className="text-gray-400">Genre tidak tersedia saat ini.</p>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {genres.map((genre) => (
@@ -61,4 +39,24 @@ export default function GenreIndexPage() {
       </div>
     </>
   );
+}
+
+// ✅ Static generation with fallback
+export async function getStaticProps() {
+  try {
+    const allTags = await fetchGenres();
+
+    // Filter hanya genre (bukan theme atau content warning)
+    const genres = allTags.filter((tag: any) => tag.group === "genre");
+
+    return {
+      props: { genres },
+      revalidate: 3600, // update tiap 1 jam
+    };
+  } catch (error) {
+    console.error("Gagal fetch genres:", error);
+    return {
+      props: { genres: [] },
+    };
+  }
 }
