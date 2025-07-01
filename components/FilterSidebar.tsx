@@ -1,16 +1,18 @@
 import { useEffect, useState } from "react";
 
+interface Genre {
+  id: string;
+  name: string;
+  group: string;
+}
+
 interface Props {
   selectedGenres: string[];
   setSelectedGenres: (genres: string[]) => void;
   selectedStatus: string;
   setSelectedStatus: (status: string) => void;
-}
-
-interface Genre {
-  id: string;
-  name: string;
-  group: string;
+  allGenres?: Genre[]; // ✅ dari server (opsional)
+  disabled?: boolean;  // ✅ nonaktifkan filter (opsional)
 }
 
 const statuses = ["All", "Ongoing", "Completed", "Hiatus", "Cancelled"];
@@ -20,23 +22,29 @@ export default function FilterSidebar({
   setSelectedGenres,
   selectedStatus,
   setSelectedStatus,
+  allGenres,
+  disabled = false,
 }: Props) {
-  const [genresList, setGenresList] = useState<string[]>([]);
+  const [genresList, setGenresList] = useState<Genre[]>([]);
 
   useEffect(() => {
-    async function fetchGenres() {
-      try {
-        const res = await fetch("/api/genres");
-        const json: Genre[] = await res.json();
-        const onlyNames = json.map((g) => g.name);
-        setGenresList(onlyNames);
-      } catch (error) {
-        console.error("Failed to fetch genres:", error);
+    if (allGenres && allGenres.length > 0) {
+      setGenresList(allGenres.filter((g) => g.group === "genre"));
+    } else {
+      // fallback fetch dari API lokal
+      async function fetchGenres() {
+        try {
+          const res = await fetch("/api/genres");
+          const json: Genre[] = await res.json();
+          setGenresList(json.filter((g) => g.group === "genre"));
+        } catch (error) {
+          console.error("Failed to fetch genres:", error);
+        }
       }
-    }
 
-    fetchGenres();
-  }, []);
+      fetchGenres();
+    }
+  }, [allGenres]);
 
   const toggleGenre = (genre: string) => {
     if (selectedGenres.includes(genre)) {
@@ -55,15 +63,16 @@ export default function FilterSidebar({
         <div className="flex flex-wrap gap-2">
           {genresList.map((genre) => (
             <button
-              key={genre}
-              onClick={() => toggleGenre(genre)}
-              className={`px-2 py-1 text-xs rounded-full border ${
-                selectedGenres.includes(genre)
+              key={genre.id}
+              onClick={() => toggleGenre(genre.name)}
+              disabled={disabled}
+              className={`px-2 py-1 text-xs rounded-full border transition ${
+                selectedGenres.includes(genre.name)
                   ? "bg-primary text-white border-primary"
                   : "bg-background text-foreground border-muted"
-              }`}
+              } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
             >
-              {genre}
+              {genre.name}
             </button>
           ))}
         </div>
@@ -74,6 +83,7 @@ export default function FilterSidebar({
         <select
           value={selectedStatus}
           onChange={(e) => setSelectedStatus(e.target.value)}
+          disabled={disabled}
           className="w-full text-sm bg-background border border-muted rounded px-2 py-1"
         >
           {statuses.map((status) => (
