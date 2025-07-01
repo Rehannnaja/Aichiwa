@@ -1,17 +1,11 @@
 const API = "https://api.mangadex.org";
 const CDN = "https://uploads.mangadex.org";
 
-const MATURE_TAGS = ["Pornographic", "Hentai", "Mature"];
-
-// ✅ Fetch populer
-export async function fetchPopularManhwa(limit = 12, withMature = false) {
-  const tagFilter = withMature
-    ? ""
-    : `&excludedTags[]=${MATURE_TAGS.join("&excludedTags[]=")}`;
-
+// ✅ Fetch populer (fix full rating)
+export async function fetchPopularManhwa(limit = 12) {
   try {
     const res = await fetch(
-      `${API}/manga?limit=${limit}&availableTranslatedLanguage[]=en&order[followedCount]=desc&contentRating[]=safe&contentRating[]=suggestive${tagFilter}&includes[]=cover_art`
+      `${API}/manga?limit=${limit}&availableTranslatedLanguage[]=en&order[followedCount]=desc&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic&includes[]=cover_art`
     );
 
     if (!res.ok) {
@@ -63,15 +57,11 @@ export async function fetchChapterImages(chapterId: string) {
 }
 
 // ✅ Search
-export async function searchManhwa(query: string, withMature = false) {
-  const tagFilter = withMature
-    ? ""
-    : `&excludedTags[]=${MATURE_TAGS.join("&excludedTags[]=")}`;
-
+export async function searchManhwa(query: string) {
   const res = await fetch(
     `${API}/manga?title=${encodeURIComponent(
       query
-    )}&availableTranslatedLanguage[]=en${tagFilter}&includes[]=cover_art`
+    )}&availableTranslatedLanguage[]=en&includes[]=cover_art`
   );
   const data = await res.json();
   return data.data;
@@ -114,7 +104,7 @@ export async function getMangaByFilter({
     status !== "All" ? `&status[]=${status.toLowerCase()}` : "";
 
   const res = await fetch(
-    `${API}/manga?limit=30&availableTranslatedLanguage[]=en&contentRating[]=safe&contentRating[]=suggestive${tagFilter}${statusQuery}&includes[]=cover_art`
+    `${API}/manga?limit=30&availableTranslatedLanguage[]=en&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic${tagFilter}${statusQuery}&includes[]=cover_art`
   );
   const json = await res.json();
 
@@ -128,9 +118,9 @@ export async function getMangaByFilter({
   }));
 }
 
-// ✅ Trending functions (daily / weekly / monthly)
+// ✅ Trending (daily/weekly/monthly)
 export async function getTrendingDaily() {
-  const data = await fetchPopularManhwa(12, false);
+  const data = await fetchPopularManhwa(12);
   return data.map((manga: any) => ({
     id: manga.id,
     title: manga.attributes.title?.en || "No title",
@@ -142,7 +132,7 @@ export async function getTrendingDaily() {
 }
 
 export async function getTrendingWeekly() {
-  const data = await fetchPopularManhwa(12, false);
+  const data = await fetchPopularManhwa(12);
   return data.map((manga: any) => ({
     id: manga.id,
     title: manga.attributes.title?.en || "No title",
@@ -154,7 +144,7 @@ export async function getTrendingWeekly() {
 }
 
 export async function getTrendingMonthly() {
-  const data = await fetchPopularManhwa(12, false);
+  const data = await fetchPopularManhwa(12);
   return data.map((manga: any) => ({
     id: manga.id,
     title: manga.attributes.title?.en || "No title",
@@ -163,4 +153,4 @@ export async function getTrendingMonthly() {
     coverImage: getCoverUrl(manga),
     slug: manga.id,
   }));
-  }
+}
