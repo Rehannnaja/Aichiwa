@@ -6,6 +6,12 @@ import Navbar from "@/components/Navbar";
 import FilterSidebar from "@/components/FilterSidebar";
 import { getMangaByFilter, fetchGenres } from "@/lib/mangadex";
 
+interface Genre {
+  id: string;
+  name: string;
+  group: string;
+}
+
 export default function GenreDetailPage({
   name,
   genreId,
@@ -15,7 +21,7 @@ export default function GenreDetailPage({
   name: string;
   genreId: string;
   mangaList: any[];
-  allGenres: { id: string; name: string }[];
+  allGenres: Genre[];
 }) {
   return (
     <>
@@ -74,7 +80,14 @@ export default function GenreDetailPage({
 // ✅ Server-side data fetch
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const { name } = context.params as { name: string };
-  const allGenres = await fetchGenres();
+  const rawGenres = await fetchGenres();
+
+  // Tambahkan group agar valid dengan FilterSidebar
+  const allGenres = rawGenres.map((genre) => ({
+    ...genre,
+    group: "genre",
+  }));
+
   const matched = allGenres.find(
     (g) => g.name.toLowerCase() === decodeURIComponent(name).toLowerCase()
   );
