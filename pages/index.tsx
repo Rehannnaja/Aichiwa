@@ -41,7 +41,7 @@ export default function Home() {
         <main className="px-4 sm:px-6 lg:px-8 py-6 space-y-10">
           {topManhwa && (
             <HeroBanner
-              title={topManhwa.attributes.title.en || "Manhwa Pilihan"}
+              title={topManhwa.attributes.title?.en || "Manhwa Pilihan"}
               description={
                 topManhwa.attributes.description?.en?.slice(0, 120) ||
                 "Baca manhwa pilihan terbaik minggu ini secara gratis dan legal!"
@@ -53,18 +53,24 @@ export default function Home() {
 
           <section>
             <h2 className="text-2xl font-bold mb-4">🔥 Trending Hari Ini</h2>
-            <ManhwaGrid
-              data={trending.map((m) => ({
-                id: m.id,
-                title: m.attributes.title.en,
-                description: m.attributes.description?.en,
-                cover: getCoverUrl(m),
-                slug: m.id,
-              }))}
-              withBookmark
-              withContinue
-              showDescription
-            />
+            {trending.length === 0 ? (
+              <p className="text-center text-gray-400">
+                Tidak ada manhwa yang tersedia saat ini.
+              </p>
+            ) : (
+              <ManhwaGrid
+                data={trending.map((m) => ({
+                  id: m.id,
+                  title: m.attributes.title?.en || "Tanpa Judul",
+                  description: m.attributes.description?.en?.slice(0, 100) || "Deskripsi belum tersedia.",
+                  cover: getCoverUrl(m),
+                  slug: m.id,
+                }))}
+                withBookmark
+                withContinue
+                showDescription
+              />
+            )}
           </section>
 
           <section>
