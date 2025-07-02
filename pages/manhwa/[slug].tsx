@@ -2,18 +2,26 @@ import { GetServerSideProps } from "next";
 import Head from "next/head";
 import { fetchGenres } from "@/lib/mangadex";
 
-type Props = {
-  manga: {
-    id: string;
-    title: string;
-    description: string;
-    cover: string;
-    slug: string;
-    genres: string[];
-  };
+type Genre = {
+  id: string;
+  name: string;
 };
 
-export default function ManhwaDetail({ manga }: Props) {
+type MangaDetail = {
+  id: string;
+  title: string;
+  description: string;
+  cover: string;
+  slug: string;
+  genreIds: string[];
+};
+
+type Props = {
+  manga: MangaDetail;
+  genres: Genre[];
+};
+
+export default function ManhwaDetail({ manga, genres }: Props) {
   return (
     <>
       <Head>
@@ -23,12 +31,12 @@ export default function ManhwaDetail({ manga }: Props) {
         <img src={manga.cover} alt={manga.title} className="w-full rounded" />
         <h1 className="text-3xl font-bold mt-4">{manga.title}</h1>
         <div className="flex flex-wrap gap-2 mt-2">
-          {manga.genres.map((g) => (
+          {genres.map((g) => (
             <span
-              key={g}
+              key={g.id}
               className="bg-indigo-600 text-sm px-3 py-1 rounded-full"
             >
-              {g}
+              {g.name}
             </span>
           ))}
         </div>
@@ -58,15 +66,12 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       ? `https://uploads.mangadex.org/covers/${data.id}/${coverRel.attributes.fileName}.512.jpg`
       : "";
 
-    const tagIds = data.relationships
+    const genreIds = data.relationships
       .filter((rel: any) => rel.type === "tag")
       .map((rel: any) => rel.id);
 
     const allGenres = await fetchGenres();
-
-    const genres = allGenres
-      .filter((genre) => tagIds.includes(genre.id))
-      .map((genre) => genre.name);
+    const genres = allGenres.filter((g) => genreIds.includes(g.id));
 
     return {
       props: {
@@ -76,12 +81,13 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
           description,
           cover,
           slug: data.id,
-          genres,
+          genreIds,
         },
+        genres,
       },
     };
-  } catch (err) {
-    console.error("Error:", err);
+  } catch (error) {
+    console.error("Error fetching manhwa detail:", error);
     return { notFound: true };
   }
 };
