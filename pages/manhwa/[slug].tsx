@@ -1,119 +1,90 @@
-import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
-import Image from "next/image";
+import { GetServerSideProps } from "next";
+import { fetchGenres } from "@/lib/mangadex";
+import Head from "next/head";
 
-import BookmarkButton from "@/components/BookmarkButton";
-import ContinueReadingButton from "@/components/ContinueReadingButton";
-import ChapterList from "@/components/ChapterList";
-
-interface ManhwaDetail {
-  id: string;
-  title: string;
-  description: string;
-  cover: string;
-  slug: string;
-  genres: string[];
-  chapters: {
+type Props = {
+  manga: {
     id: string;
     title: string;
-    chapter: string;
-    date: string;
-    language: string;
-  }[];
-}
+    description: string;
+    cover: string;
+    slug: string;
+    genres: string[];
+  };
+};
 
-export default function ManhwaDetailPage() {
-  const router = useRouter();
-  const { slug } = router.query;
-
-  const [manhwa, setManhwa] = useState<ManhwaDetail | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [errorMsg, setErrorMsg] = useState("");
-
-  useEffect(() => {
-    if (!slug || typeof slug !== "string") return;
-
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const res = await fetch(`/api/manhwa/${slug}`);
-        if (!res.ok) throw new Error(`Gagal fetch manhwa: ${res.status}`);
-
-        const data: ManhwaDetail = await res.json();
-        if (!data || !data.title || !data.cover) {
-          throw new Error("Data manhwa tidak valid.");
-        }
-
-        setManhwa(data);
-      } catch (err: any) {
-        console.error("[Fetch Error]", err.message || err);
-        setErrorMsg("Manhwa tidak ditemukan atau terjadi kesalahan.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [slug]);
-
-  if (loading) return <div className="p-4 text-white">Loading...</div>;
-  if (!manhwa)
-    return <div className="p-4 text-red-500">{errorMsg || "Manhwa tidak ditemukan."}</div>;
-
+export default function ManhwaDetailPage({ manga }: Props) {
   return (
-    <div className="max-w-5xl mx-auto px-4 py-6 text-white">
-      <div className="flex flex-col md:flex-row gap-6">
-        {/* Poster */}
-        <div className="relative w-full md:w-1/3 aspect-[3/4] rounded-xl overflow-hidden shadow-lg">
-          <Image
-            src={manhwa.cover}
-            alt={manhwa.title}
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 100vw, 33vw"
-          />
+    <>
+      <Head>
+        <title>{manga.title} | Aichiwa</title>
+      </Head>
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <img src={manga.cover} alt={manga.title} className="w-full rounded-md mb-4" />
+        <h1 className="text-3xl font-bold mb-2">{manga.title}</h1>
+        <div className="flex flex-wrap gap-2 mb-4">
+          {manga.genres.map((genre) => (
+            <span
+              key={genre}
+              className="bg-blue-600 text-white text-sm px-3 py-1 rounded-full"
+            >
+              {genre}
+            </span>
+          ))}
         </div>
-
-        {/* Info */}
-        <div className="flex-1 space-y-4">
-          <h1 className="text-2xl font-bold">{manhwa.title}</h1>
-
-          <div className="flex gap-2 flex-wrap">
-            {manhwa.genres.map((genre) => (
-              <span
-                key={genre}
-                className="text-sm bg-blue-700/60 px-3 py-1 rounded-full"
-              >
-                {genre}
-              </span>
-            ))}
-          </div>
-
-          <p className="text-sm text-zinc-300 whitespace-pre-line">
-            {manhwa.description}
-          </p>
-
-          <div className="flex gap-3 mt-2">
-            <BookmarkButton
-              mangaId={manhwa.id}
-              title={manhwa.title}
-              coverImage={manhwa.cover}
-            />
-            <ContinueReadingButton
-              mangaId={manhwa.id}
-              title={manhwa.title}
-              coverImage={manhwa.cover}
-              slug={manhwa.slug}
-            />
-          </div>
-        </div>
+        <p className="text-gray-300">{manga.description}</p>
       </div>
-
-      {/* Chapter list */}
-      <div className="mt-8">
-        <h2 className="text-xl font-semibold mb-2">Chapters</h2>
-        <ChapterList chapters={manhwa.chapters} />
-      </div>
-    </div>
+    </>
   );
 }
+
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  const { slug } = context.params as { slug: string };
+
+  try {
+    const res = await fetch(
+      `https://api.mangadex.org/manga/${slug}?includes[]=cover_art&includes[]=tag`
+    );
+    const json = await res.json();
+    const mangaRaw = json.data;
+
+    // Ambil cover
+    const coverArt = mangaRaw.relationships.find(
+      (rel: any) => rel.type === "cover_art"
+    );
+
+    const cover = coverArt
+      ? `https://uploads.mangadex.org/covers/${mangaRaw.id}/${coverArt.attributes.fileName}.512.jpg`
+      : "";
+
+    // Ambil semua genre dari API
+    const allGenres = await fetchGenres();
+    const genreIds = mangaRaw.relationships
+      .filter((rel: any) => rel.type === "tag")
+      .map((rel: any) => rel.id);
+
+    const genres = allGenres
+      .filter((genre) => genreIds.includes(genre.id))
+      .map((genre) => genre.name);
+
+    const manga = {
+      id: mangaRaw.id,
+      title: mangaRaw.attributes.title?.en || "No title",
+      description: mangaRaw.attributes.description?.en || "No description",
+      cover,
+      slug: mangaRaw.id,
+      genres,
+    };
+
+    return {
+      props: {
+        manga,
+      },
+    };
+  } catch (error) {
+    console.error("[DETAIL_ERROR]", error);
+    return {
+      notFound: true,
+    };
+  }
+};
