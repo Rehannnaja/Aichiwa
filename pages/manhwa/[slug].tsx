@@ -1,83 +1,69 @@
-// pages/manhwa/[slug].tsx
 import { GetServerSideProps } from 'next';
-import Head from 'next/head';
 import { fetchManhwaDetail, fetchGenres } from '@/lib/mangadex';
-import { Manhwa } from '@/types';
+import { Manhwa, Genre } from '@/types';
+import Head from 'next/head';
 
 interface Props {
-  manhwa: Manhwa | null;
-}
-
-export default function ManhwaDetailPage({ manhwa }: Props) {
-  if (!manhwa) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
-        <p>Manhwa tidak ditemukan.</p>
-      </div>
-    );
-  }
-
-  return (
-    <>
-      <Head>
-        <title>{manhwa.title} | Aichiwa</title>
-      </Head>
-      <div className="min-h-screen bg-gray-950 text-white p-6">
-        <div className="max-w-4xl mx-auto flex flex-col md:flex-row gap-8">
-          <img
-            src={manhwa.cover}
-            alt={manhwa.title}
-            className="w-full md:w-64 rounded-lg shadow-lg"
-          />
-          <div className="flex-1 space-y-4">
-            <h1 className="text-3xl font-bold">{manhwa.title}</h1>
-            <div className="flex flex-wrap gap-2">
-              {manhwa.genres.map((genre) => (
-                <span
-                  key={genre}
-                  className="px-3 py-1 bg-blue-700 text-sm rounded-full"
-                >
-                  {genre}
-                </span>
-              ))}
-            </div>
-            <p className="text-gray-300">{manhwa.description || 'Tidak ada deskripsi.'}</p>
-          </div>
-        </div>
-      </div>
-    </>
-  );
+  manhwa: Manhwa;
+  genres: string[];
 }
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const { slug } = context.params as { slug: string };
 
   try {
-    const manhwa = await fetchManhwaDetail(slug);
-    const allGenres = await fetchGenres();
+    const [manhwa, allGenres] = await Promise.all([
+      fetchManhwaDetail(slug),
+      fetchGenres(),
+    ]);
 
-    // Jika manhwa null atau tidak ditemukan
-    if (!manhwa) {
-      return { props: { manhwa: null } };
-    }
-
-    // Validasi genre agar sesuai dengan daftar genre global
     const validatedGenres = allGenres
-      .filter((genre) => manhwa.genres.includes(genre.name))
-      .map((genre) => genre.name);
+      .filter((genre: Genre) => manhwa.genres.includes(genre.name))
+      .map((genre: Genre) => genre.name);
 
     return {
       props: {
-        manhwa: {
-          ...manhwa,
-          genres: validatedGenres,
-        },
+        manhwa,
+        genres: validatedGenres,
       },
     };
   } catch (error) {
-    console.error('[ERROR] Gagal load manhwa detail:', error);
+    console.error('Error loading manhwa:', error);
     return {
-      props: { manhwa: null },
+      notFound: true,
     };
   }
 };
+
+export default function ManhwaDetailPage({ manhwa, genres }: Props) {
+  return (
+    <>
+      <Head>
+        <title>{manhwa.title} | Aichiwa</title>
+      </Head>
+      <div className="min-h-screen bg-gray-950 text-white py-12 px-4">
+        <div className="max-w-5xl mx-auto flex flex-col md:flex-row gap-8">
+          <img
+            src={manhwa.cover}
+            alt={manhwa.title}
+            className="w-full md:w-72 rounded-lg shadow-lg object-cover"
+          />
+          <div className="flex-1 space-y-4">
+            <h1 className="text-3xl font-bold">{manhwa.title}</h1>
+            <div className="flex flex-wrap gap-2">
+              {genres.map((genre) => (
+                <span
+                  key={genre}
+                  className="text-sm bg-blue-600/20 text-blue-300 px-3 py-1 rounded-full"
+                >
+                  {genre}
+                </span>
+              ))}
+            </div>
+            <p className="text-gray-300 whitespace-pre-line">{manhwa.description}</p>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
