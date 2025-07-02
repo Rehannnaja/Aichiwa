@@ -17,30 +17,31 @@ export default async function handler(
   }
 
   try {
-    const mangaRaw = await fetchManhwaDetail(slug);
-    const chaptersRaw = await fetchChapters(slug);
+    const rawManga = await fetchManhwaDetail(slug); // ini masih utuh
+    const rawChapters = await fetchChapters(slug);
     const allGenres = await fetchGenres();
 
-    const genreIds = mangaRaw.relationships
+    // Ambil genre dari rawManga.relationships (bukan dari data yang sudah di-map)
+    const genreIds = rawManga.relationships
       .filter((rel: any) => rel.type === "tag")
-      .map((tag: any) => tag.id);
+      .map((rel: any) => rel.id);
 
     const genres = allGenres
-      .filter((g) => genreIds.includes(g.id))
-      .map((g) => g.name);
+      .filter((genre) => genreIds.includes(genre.id))
+      .map((genre) => genre.name);
 
     const data = {
-      id: mangaRaw.id,
-      title: mangaRaw.attributes?.title?.en || "No title",
-      description: mangaRaw.attributes?.description?.en || "No description",
-      cover: getCoverUrl(mangaRaw),
-      slug: mangaRaw.id,
+      id: rawManga.id,
+      title: rawManga.attributes?.title?.en || "No title",
+      description: rawManga.attributes?.description?.en || "No description",
+      cover: getCoverUrl(rawManga),
+      slug: rawManga.id,
       genres,
-      chapters: chaptersRaw.map((ch: any) => ({
+      chapters: rawChapters.map((ch: any) => ({
         id: ch.id,
         title: ch.title || `Chapter ${ch.chapter}`,
         chapter: ch.chapter || "0",
-        date: "", // bisa isi: new Date(ch.attributes.publishAt).toISOString()
+        date: "", // bisa kamu isi tanggal publish kalau mau
         language: ch.language || "en",
       })),
     };
