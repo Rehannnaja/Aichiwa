@@ -1,47 +1,50 @@
-import { GetServerSideProps } from "next";
-import Head from "next/head";
-import { fetchGenres } from "@/lib/mangadex";
+// pages/manhwa/[slug].tsx
+import { GetServerSideProps } from 'next';
+import Head from 'next/head';
+import { fetchManhwaDetail, fetchGenres } from '@/lib/mangadex';
+import { Manhwa } from '@/types';
 
-type Genre = {
-  id: string;
-  name: string;
-};
+interface Props {
+  manhwa: Manhwa | null;
+}
 
-type MangaDetail = {
-  id: string;
-  title: string;
-  description: string;
-  cover: string;
-  slug: string;
-  genreIds: string[];
-};
+export default function ManhwaDetailPage({ manhwa }: Props) {
+  if (!manhwa) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
+        <p>Manhwa tidak ditemukan.</p>
+      </div>
+    );
+  }
 
-type Props = {
-  manga: MangaDetail;
-  genres: Genre[];
-};
-
-export default function ManhwaDetail({ manga, genres }: Props) {
   return (
     <>
       <Head>
-        <title>{manga.title} | Aichiwa</title>
+        <title>{manhwa.title} | Aichiwa</title>
       </Head>
-      <main className="max-w-3xl mx-auto px-4 py-8 text-white">
-        <img src={manga.cover} alt={manga.title} className="w-full rounded" />
-        <h1 className="text-3xl font-bold mt-4">{manga.title}</h1>
-        <div className="flex flex-wrap gap-2 mt-2">
-          {genres.map((g) => (
-            <span
-              key={g.id}
-              className="bg-indigo-600 text-sm px-3 py-1 rounded-full"
-            >
-              {g.name}
-            </span>
-          ))}
+      <div className="min-h-screen bg-gray-950 text-white p-6">
+        <div className="max-w-4xl mx-auto flex flex-col md:flex-row gap-8">
+          <img
+            src={manhwa.cover}
+            alt={manhwa.title}
+            className="w-full md:w-64 rounded-lg shadow-lg"
+          />
+          <div className="flex-1 space-y-4">
+            <h1 className="text-3xl font-bold">{manhwa.title}</h1>
+            <div className="flex flex-wrap gap-2">
+              {manhwa.genres.map((genre) => (
+                <span
+                  key={genre}
+                  className="px-3 py-1 bg-blue-700 text-sm rounded-full"
+                >
+                  {genre}
+                </span>
+              ))}
+            </div>
+            <p className="text-gray-300">{manhwa.description || 'Tidak ada deskripsi.'}</p>
+          </div>
         </div>
-        <p className="mt-4 text-gray-300">{manga.description}</p>
-      </main>
+      </div>
     </>
   );
 }
@@ -50,44 +53,31 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   const { slug } = context.params as { slug: string };
 
   try {
-    const res = await fetch(
-      `https://api.mangadex.org/manga/${slug}?includes[]=cover_art&includes[]=tag`
-    );
-    const json = await res.json();
-    const data = json.data;
-
-    const title = data.attributes.title?.en || "No title";
-    const description = data.attributes.description?.en || "No description";
-
-    const coverRel = data.relationships.find(
-      (rel: any) => rel.type === "cover_art"
-    );
-    const cover = coverRel
-      ? `https://uploads.mangadex.org/covers/${data.id}/${coverRel.attributes.fileName}.512.jpg`
-      : "";
-
-    const genreIds = data.relationships
-      .filter((rel: any) => rel.type === "tag")
-      .map((rel: any) => rel.id);
-
+    const manhwa = await fetchManhwaDetail(slug);
     const allGenres = await fetchGenres();
-    const genres = allGenres.filter((g) => genreIds.includes(g.id));
+
+    // Jika manhwa null atau tidak ditemukan
+    if (!manhwa) {
+      return { props: { manhwa: null } };
+    }
+
+    // Validasi genre agar sesuai dengan daftar genre global
+    const validatedGenres = allGenres
+      .filter((genre) => manhwa.genres.includes(genre.name))
+      .map((genre) => genre.name);
 
     return {
       props: {
-        manga: {
-          id: data.id,
-          title,
-          description,
-          cover,
-          slug: data.id,
-          genreIds,
+        manhwa: {
+          ...manhwa,
+          genres: validatedGenres,
         },
-        genres,
       },
     };
   } catch (error) {
-    console.error("Error fetching manhwa detail:", error);
-    return { notFound: true };
+    console.error('[ERROR] Gagal load manhwa detail:', error);
+    return {
+      props: { manhwa: null },
+    };
   }
 };
