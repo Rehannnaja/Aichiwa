@@ -1,7 +1,16 @@
 const API = "https://api.mangadex.org";
 const CDN = "https://uploads.mangadex.org";
 
-// ✅ Fetch populer (fix full rating)
+// ✅ Cover builder
+export function getCoverUrl(manga: any) {
+  const coverArt = manga.relationships.find(
+    (rel: any) => rel.type === "cover_art"
+  );
+  if (!coverArt) return "";
+  return `${CDN}/covers/${manga.id}/${coverArt.attributes.fileName}.512.jpg`;
+}
+
+// ✅ Fetch populer (berdasarkan followers)
 export async function fetchPopularManhwa(limit = 12) {
   try {
     const res = await fetch(
@@ -21,11 +30,29 @@ export async function fetchPopularManhwa(limit = 12) {
   }
 }
 
-// ✅ Detail manhwa
+// ✅ Detail manhwa fix untuk [slug].tsx
 export async function fetchManhwaDetail(id: string) {
-  const res = await fetch(`${API}/manga/${id}?includes[]=cover_art`);
-  const data = await res.json();
-  return data.data;
+  const res = await fetch(`${API}/manga/${id}?includes[]=cover_art&includes[]=tag`);
+  if (!res.ok) throw new Error("Gagal fetch detail");
+
+  const json = await res.json();
+  const manga = json.data;
+
+  const title = manga.attributes.title?.en || "No title";
+  const description = manga.attributes.description?.en || "No description";
+  const cover = getCoverUrl(manga);
+  const genres = manga.relationships
+    .filter((rel: any) => rel.type === "tag")
+    .map((tag: any) => tag.attributes.name?.en || "Unknown");
+
+  return {
+    id: manga.id,
+    title,
+    description,
+    cover,
+    slug: manga.id,
+    genres,
+  };
 }
 
 // ✅ Chapter list
@@ -39,6 +66,7 @@ export async function fetchChapters(mangaId: string, limit = 100) {
     id: ch.id,
     chapter: ch.attributes.chapter,
     title: ch.attributes.title,
+    date: ch.attributes.publishAt,
     language: ch.attributes.translatedLanguage,
   }));
 }
@@ -56,7 +84,7 @@ export async function fetchChapterImages(chapterId: string) {
   );
 }
 
-// ✅ Search
+// ✅ Search manhwa
 export async function searchManhwa(query: string) {
   const res = await fetch(
     `${API}/manga?title=${encodeURIComponent(
@@ -77,15 +105,6 @@ export async function fetchGenres() {
     name: tag.attributes.name.en,
     group: tag.attributes.group,
   }));
-}
-
-// ✅ Cover builder
-export function getCoverUrl(manga: any) {
-  const coverArt = manga.relationships.find(
-    (rel: any) => rel.type === "cover_art"
-  );
-  if (!coverArt) return "";
-  return `${CDN}/covers/${manga.id}/${coverArt.attributes.fileName}.512.jpg`;
 }
 
 // ✅ Filter manhwa by genre & status
@@ -132,25 +151,9 @@ export async function getTrendingDaily() {
 }
 
 export async function getTrendingWeekly() {
-  const data = await fetchPopularManhwa(12);
-  return data.map((manga: any) => ({
-    id: manga.id,
-    title: manga.attributes.title?.en || "No title",
-    description:
-      manga.attributes.description?.en?.slice(0, 100) || "No description",
-    coverImage: getCoverUrl(manga),
-    slug: manga.id,
-  }));
+  return await getTrendingDaily();
 }
 
 export async function getTrendingMonthly() {
-  const data = await fetchPopularManhwa(12);
-  return data.map((manga: any) => ({
-    id: manga.id,
-    title: manga.attributes.title?.en || "No title",
-    description:
-      manga.attributes.description?.en?.slice(0, 100) || "No description",
-    coverImage: getCoverUrl(manga),
-    slug: manga.id,
-  }));
+  return await getTrendingDaily();
 }
