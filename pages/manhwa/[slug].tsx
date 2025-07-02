@@ -2,6 +2,11 @@ import { GetServerSideProps } from "next";
 import { fetchGenres } from "@/lib/mangadex";
 import Head from "next/head";
 
+type Genre = {
+  id: string;
+  name: string;
+};
+
 type Props = {
   manga: {
     id: string;
@@ -64,7 +69,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       .map((rel: any) => rel.id);
 
     const genres = allGenres
-      .filter((genre) => genreIds.includes(genre.id))
+      .filter((genre: Genre) => genreIds.includes(genre.id))
       .map((genre) => genre.name);
 
     const manga = {
