@@ -3,7 +3,7 @@ const CDN = "https://uploads.mangadex.org";
 
 // ✅ Cover builder
 export function getCoverUrl(manga: any) {
-  const coverArt = manga.relationships.find(
+  const coverArt = manga.relationships?.find(
     (rel: any) => rel.type === "cover_art"
   );
   if (!coverArt) return "";
@@ -30,7 +30,16 @@ export async function fetchPopularManhwa(limit = 12) {
   }
 }
 
-// ✅ Detail manhwa fix untuk [slug].tsx
+// ✅ Fetch RAW detail untuk API internal
+export async function fetchRawManhwaDetail(id: string) {
+  const res = await fetch(`${API}/manga/${id}?includes[]=cover_art&includes[]=tag`);
+  if (!res.ok) throw new Error("Gagal fetch detail RAW");
+
+  const json = await res.json();
+  return json.data;
+}
+
+// ✅ Detail manhwa fix untuk halaman [slug].tsx
 export async function fetchManhwaDetail(id: string) {
   const res = await fetch(`${API}/manga/${id}?includes[]=cover_art&includes[]=tag`);
   if (!res.ok) throw new Error("Gagal fetch detail");
