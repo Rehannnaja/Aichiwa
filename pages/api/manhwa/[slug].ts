@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import {
-  fetchManhwaDetail,
+  fetchRawManhwaDetail,
   fetchChapters,
   fetchGenres,
   getCoverUrl,
@@ -11,17 +11,15 @@ export default async function handler(
   res: NextApiResponse
 ) {
   const { slug } = req.query;
-
   if (!slug || typeof slug !== "string") {
     return res.status(400).json({ message: "Invalid slug." });
   }
 
   try {
-    const rawManga = await fetchManhwaDetail(slug); // ini masih utuh
+    const rawManga = await fetchRawManhwaDetail(slug);
     const rawChapters = await fetchChapters(slug);
     const allGenres = await fetchGenres();
 
-    // Ambil genre dari rawManga.relationships (bukan dari data yang sudah di-map)
     const genreIds = rawManga.relationships
       .filter((rel: any) => rel.type === "tag")
       .map((rel: any) => rel.id);
@@ -41,7 +39,7 @@ export default async function handler(
         id: ch.id,
         title: ch.title || `Chapter ${ch.chapter}`,
         chapter: ch.chapter || "0",
-        date: "", // bisa kamu isi tanggal publish kalau mau
+        date: "",
         language: ch.language || "en",
       })),
     };
