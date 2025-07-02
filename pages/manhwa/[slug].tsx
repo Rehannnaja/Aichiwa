@@ -39,7 +39,7 @@ export default function ManhwaDetailPage() {
         const res = await fetch(`/api/manhwa/${slug}`);
         if (!res.ok) throw new Error(`Gagal fetch manhwa: ${res.status}`);
 
-        const data = await res.json();
+        const data: ManhwaDetail = await res.json();
         if (!data || !data.title || !data.cover) {
           throw new Error("Data manhwa tidak valid.");
         }
